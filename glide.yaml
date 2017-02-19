@@ -1,4 +1,4 @@
-package: github.com/qeek-dev/ccstalk
+package: github.com/qeek-dev/cryhel
 import: []
 testImport:
 - package: gopkg.in/check.v1
