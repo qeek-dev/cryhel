@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/qeek-dev/cryhel.svg?style=svg)](https://circleci.com/gh/qeek-dev/cryhel)
+
 # Qeek.dev crypto helper
 
 > crypto helper to handle data encrypt and decrypt
