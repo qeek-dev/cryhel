@@ -67,5 +67,5 @@ dec, err := c.Decrypt.Msg("encrypt string").Do(&out)
 
 // Out(&out): json.Unmarshal to struct, dependency on what struct you encrypt to
 // decrypt with default encoding: base64.RawURLEncoding
-dec, err := c.Decrypt.Msg("encryptBase64String").Encoding(base64.RawURLEncoding).Do()(&out)
+dec, err := c.Decrypt.Msg("encryptBase64String").Encoding(base64.RawURLEncoding).Do(&out)
 ```
