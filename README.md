@@ -31,7 +31,7 @@ $ glide i
 
 ```sh
 $ go test
-OK: 8 passed
+OK: 7 passed
 PASS
 ok      github.com/qeek-dev/cryhel      0.010s
 ```
@@ -48,14 +48,24 @@ $ glide get github.com/qeek-dev/cryhel
 // new crypto helper
 c, err = cryhel.NewCrypto("AES256Key-32Characters1234567890")
 
-// encrypt
+// encrypt (default base64 StdEncoding)
 enc, err := c.Encrypt.Msg("string your want to encrypt").Do()
-enc, err := c.Encrypt.QueryEscapeMsg("string your want to encrypt").Do()
 
-// decrypt
-// Out(&out): json.Unmarshal to struct, dependency on what struct you encrypt to
+// encrypt
+// StdEncoding
+// URLEncoding
+// RawStdEncoding
+// RawURLEncoding
+enc, err := c.Encrypt.Msg("string your want to encrypt").Encoding(base64.RawURLEncoding).Do()
+
+// decrypt with default encoding: base64.StdEncoding
 dec, err := c.Decrypt.Msg("encrypt string").Do()
-dec, err := c.Decrypt.Msg("encrypt string").Out(&out)
-dec, err := c.Decrypt.QueryEscapeMsg("encryptBase64String").Do()
-dec, err := c.Decrypt.QueryEscapeMsg("encryptBase64String").Out(&out)
+
+// Out(&out): json.Unmarshal to struct, dependency on what struct you encrypt to
+// decrypt with default encoding: base64.StdEncoding
+dec, err := c.Decrypt.Msg("encrypt string").Do(&out)
+
+// Out(&out): json.Unmarshal to struct, dependency on what struct you encrypt to
+// decrypt with default encoding: base64.RawURLEncoding
+dec, err := c.Decrypt.Msg("encryptBase64String").Encoding(base64.RawURLEncoding).Do()(&out)
 ```
