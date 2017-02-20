@@ -38,6 +38,12 @@ ok      github.com/qeek-dev/cryhel      0.010s
 
 ## Usage
 
+install via glide
+
+```sh
+$ glide get github.com/qeek-dev/cryhel
+```
+
 ```go
 // new crypto helper
 c, err = cryhel.NewCrypto("AES256Key-32Characters1234567890")
