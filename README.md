@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/qeek-dev/cryhel.svg?style=svg)](https://circleci.com/gh/qeek-dev/cryhel)
+
 # Qeek.dev crypto helper
 
 > crypto helper to handle data encrypt and decrypt
@@ -35,6 +37,12 @@ ok      github.com/qeek-dev/cryhel      0.010s
 ```
 
 ## Usage
+
+install via glide
+
+```sh
+$ glide get github.com/qeek-dev/cryhel
+```
 
 ```go
 // new crypto helper
