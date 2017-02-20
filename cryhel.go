@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"reflect"
 )
 
@@ -117,40 +116,25 @@ func NewEncryptService(s *Crypto) *EncryptService {
 // method  "Crypto.Encrypt.Msg"
 type EncryptMsgCall struct {
 	s *Crypto
+	e *base64.Encoding
 	m string
 }
 
 func (r *EncryptService) Msg(msg string) *EncryptMsgCall {
-	c := &EncryptMsgCall{s: r.s, m: msg}
+	c := &EncryptMsgCall{s: r.s, m: msg, e: base64.StdEncoding}
 	return c
+}
+
+func (r *EncryptMsgCall) Encoding(encoding *base64.Encoding) *EncryptMsgCall {
+	r.e = encoding
+	return r
 }
 
 func (r *EncryptMsgCall) Do() (string, error) {
 	if ciphertext, err := r.s.encrypt(r.m); err != nil {
 		return "", err
 	} else {
-		return base64.StdEncoding.EncodeToString(ciphertext), nil
-	}
-}
-
-// method  "Crypto.Encrypt.QueryEscapeMsg"
-type EncryptQueryEscapeMsgCall struct {
-	s *Crypto
-	m string
-}
-
-func (r *EncryptService) QueryEscapeMsg(msg string) *EncryptQueryEscapeMsgCall {
-	c := &EncryptQueryEscapeMsgCall{s: r.s, m: msg}
-	return c
-}
-
-func (r *EncryptQueryEscapeMsgCall) Do() (string, error) {
-	if ciphertext, err := r.s.encrypt(r.m); err != nil {
-		return "", err
-	} else {
-		base64EncodeString := url.QueryEscape(base64.StdEncoding.EncodeToString(ciphertext))
-
-		return base64EncodeString, nil
+		return r.e.EncodeToString(ciphertext), nil
 	}
 }
 
@@ -168,16 +152,22 @@ func NewDecryptService(s *Crypto) *DecryptService {
 // method  "Crypto.Decrypt.Msg"
 type DecryptMsgCall struct {
 	s *Crypto
+	e *base64.Encoding
 	m string
 }
 
 func (r *DecryptService) Msg(msg string) *DecryptMsgCall {
-	c := &DecryptMsgCall{s: r.s, m: msg}
+	c := &DecryptMsgCall{s: r.s, m: msg, e: base64.StdEncoding}
 	return c
 }
 
+func (r *DecryptMsgCall) Encoding(encoding *base64.Encoding) *DecryptMsgCall {
+	r.e = encoding
+	return r
+}
+
 func (r *DecryptMsgCall) Do() (string, error) {
-	ciphertext, _ := base64.StdEncoding.DecodeString(r.m) // decrypt base64
+	ciphertext, _ := r.e.DecodeString(r.m) // decrypt base64
 	buf, err := r.s.decrypt(ciphertext)
 	if err != nil {
 		return "", err
@@ -191,45 +181,6 @@ func (r *DecryptMsgCall) Out(out pointer) error {
 	}
 
 	ciphertext, _ := base64.StdEncoding.DecodeString(r.m) // decrypt base64
-	buf, err := r.s.decrypt(ciphertext)
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(buf, out); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-// method  "Crypto.Decrypt.QueryEscapeMsg"
-type DecryptQueryEscapeMsgCall struct {
-	s *Crypto
-	m string
-}
-
-func (r *DecryptService) QueryEscapeMsg(msg string) *DecryptQueryEscapeMsgCall {
-	c := &DecryptQueryEscapeMsgCall{s: r.s, m: msg}
-	return c
-}
-
-func (r *DecryptQueryEscapeMsgCall) Do() (string, error) {
-	base64Encode, _ := url.QueryUnescape(r.m)                      // url unescape
-	ciphertext, _ := base64.StdEncoding.DecodeString(base64Encode) // decrypt base64
-	buf, err := r.s.decrypt(ciphertext)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func (r *DecryptQueryEscapeMsgCall) Out(out pointer) error {
-	if !isPointer(out) {
-		return errors.New(fmt.Sprintf("Value '%s' is not a pointer", out))
-	}
-
-	base64Encode, _ := url.QueryUnescape(r.m)                      // url unescape
-	ciphertext, _ := base64.StdEncoding.DecodeString(base64Encode) // decrypt base64
 	buf, err := r.s.decrypt(ciphertext)
 	if err != nil {
 		return err
