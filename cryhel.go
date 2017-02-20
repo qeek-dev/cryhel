@@ -180,7 +180,7 @@ func (r *DecryptMsgCall) Out(out pointer) error {
 		return errors.New(fmt.Sprintf("Value '%s' is not a pointer", out))
 	}
 
-	ciphertext, _ := base64.StdEncoding.DecodeString(r.m) // decrypt base64
+	ciphertext, _ := r.e.DecodeString(r.m) // decrypt base64
 	buf, err := r.s.decrypt(ciphertext)
 	if err != nil {
 		return err

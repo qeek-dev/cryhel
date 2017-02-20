@@ -111,3 +111,17 @@ func (s *MySuite) Test_Encrypt_Decrypt_Out_Msg(chk *C) {
 		}
 	}
 }
+
+func (s *MySuite) Test_Encrypt_Decrypt_Msg_Custom_Base64_Encoding(chk *C) {
+	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
+
+	if encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do(); err != nil {
+		chk.Error(err.Error())
+	} else {
+		if decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Encoding(base64.RawURLEncoding).Do(); err != nil {
+			chk.Errorf("got descrypt %q expected %q", decryptString, sourceString)
+		} else {
+			chk.Logf("decrypt base64 encode string: %q", decryptString)
+		}
+	}
+}
