@@ -27,6 +27,26 @@ $ glide update
 $ glide i
 ```
 
+### glide install error handling
+If you get error message
+```
+...
+[INFO]     Preparing to install 1 package.
+[INFO]     Attempting to get package gopkg.in/check.v1
+[INFO]     --> Moving gopkg.in/check.v1 from testImport to import
+[INFO]     Downloading dependencies. Please wait...
+[INFO]     --> Fetching gopkg.in/check.v1.
+[WARN]     Unable to checkout gopkg.in/check.v1
+[ERROR]     Update failed for gopkg.in/check.v1: Unable to get repository
+[ERROR]     Failed to checkout packages: Unable to get repository
+...
+```
+you need settting your git config
+```sh
+$ git config --global http.followRedirects true
+```
+ref: http://qiita.com/jiskanulo/items/49197cbdcc544a7f02ab
+
 ### Testing
 
 ```sh
@@ -51,11 +71,11 @@ c, err = cryhel.NewCrypto("AES256Key-32Characters1234567890")
 // encrypt (default base64 StdEncoding)
 enc, err := c.Encrypt.Msg("string your want to encrypt").Do()
 
-// encrypt
-// StdEncoding
-// URLEncoding
-// RawStdEncoding
-// RawURLEncoding
+// Encrypt parameter support
+// - StdEncoding
+// - URLEncoding
+// - RawStdEncoding
+// - RawURLEncoding
 enc, err := c.Encrypt.Msg("string your want to encrypt").Encoding(base64.RawURLEncoding).Do()
 
 // decrypt with default encoding: base64.StdEncoding
