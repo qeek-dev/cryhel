@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
+	"unicode"
 )
 
 // any is purely semantic
@@ -28,20 +30,20 @@ func isPointer(value any) bool {
 
 // encrypt general func
 func (c *Crypto) encrypt(msg string) ([]byte, error) {
-	plaintext := ZeroPadding([]byte(msg))
+	plaintext := SpacePadding([]byte(msg), c.block.BlockSize())
 
-	if len(plaintext)%aes.BlockSize != 0 {
+	if len(plaintext)%c.block.BlockSize() != 0 {
 		return nil, errors.New("plaintext is not a multiple of the block size")
 	}
 
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
-	iv := ciphertext[:aes.BlockSize]
+	ciphertext := make([]byte, c.block.BlockSize()+len(plaintext))
+	iv := ciphertext[:c.block.BlockSize()]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	mode := cipher.NewCBCEncrypter(c.block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+	mode.CryptBlocks(ciphertext[c.block.BlockSize():], plaintext)
 
 	return ciphertext, nil
 }
@@ -49,31 +51,28 @@ func (c *Crypto) encrypt(msg string) ([]byte, error) {
 // decrypt general func
 func (c *Crypto) decrypt(ciphertext []byte) ([]byte, error) {
 	blockMode := cipher.NewCBCDecrypter(c.block, c.bkey[:c.block.BlockSize()])
-	if len(ciphertext) < aes.BlockSize {
+	if len(ciphertext) < c.block.BlockSize() {
 		return nil, errors.New("ciphertext too short")
 	}
-	if len(ciphertext)%aes.BlockSize != 0 {
+	if len(ciphertext)%c.block.BlockSize() != 0 {
 		return nil, errors.New("ciphertext is not a multiple of the block size")
 	}
 
 	planeText := make([]byte, len(ciphertext))
 	blockMode.CryptBlocks(planeText, ciphertext)
 
-	planeText = ZeroUnPadding(planeText[aes.BlockSize:])
-	return planeText, nil
+	planeText = SpaceUnPadding(planeText[c.block.BlockSize():])
+	return []byte(strings.TrimSpace(string(planeText))), nil
 }
 
-func ZeroPadding(in []byte) []byte {
-	padding := aes.BlockSize - (len(in) % aes.BlockSize)
-	padtext := bytes.Repeat([]byte{0}, padding)
+func SpacePadding(in []byte, blockSize int) []byte {
+	padding := blockSize - len(in)%blockSize
+	padtext := bytes.Repeat([]byte(" "), padding)
 	return append(in, padtext...)
 }
 
-func ZeroUnPadding(origData []byte) []byte {
-	return bytes.TrimFunc(origData,
-		func(r rune) bool {
-			return r == rune(0)
-		})
+func SpaceUnPadding(origData []byte) []byte {
+	return bytes.TrimFunc(origData, unicode.IsSpace)
 }
 
 // Crypto struct
@@ -172,7 +171,7 @@ func (r *DecryptMsgCall) Do() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(buf), nil
+	return strings.TrimSpace(string(buf)), nil
 }
 
 func (r *DecryptMsgCall) Out(out pointer) error {
