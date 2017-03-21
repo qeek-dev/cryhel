@@ -23,72 +23,55 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) Test_Encrypt_Base64_StdEncoding(chk *C) {
 	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
-	if encryptString, err := s.c.Encrypt.Msg(sourceString).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		chk.Logf("encrypt base64 encode string: %q", encryptString)
-	}
+
+	encryptString, err := s.c.Encrypt.Msg(sourceString).Do()
+	chk.Assert(err, IsNil)
+	chk.Logf("encrypt base64 encode string: %q", encryptString)
 }
 
 func (s *MySuite) Test_Decrypt_Base64_StdEncoding(chk *C) {
-	encryptString := "cLcbvk4rpVRTj1kvu5pOi7ktZiCezDWcm8VR1f+XpP12eie0/cI6lagGcWXRMt8a"
-	if creds, err := s.c.Decrypt.Msg(encryptString).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		if creds != "1/fFAGRNJru1FTz70BzhT3Zg" {
-			chk.Errorf("got access_token %q expected %q", creds, "1/fFAGRNJru1FTz70BzhT3Zg")
-		} else {
-			chk.Logf("decrypt string: %q", creds)
-		}
-	}
+	encryptString := "Ive8q7ljYMKl5cjrUBtUTDRs3oV0D8bxIKOP+wpuqqUZoflYYQgsGH0oIOLv77jP"
+
+	creds, err := s.c.Decrypt.Msg(encryptString).Do()
+	chk.Assert(err, IsNil)
+	chk.Assert(creds, Equals, "1/fFAGRNJru1FTz70BzhT3Zg")
 }
 
 func (s *MySuite) Test_Encrypt_Base64_RawURLEncoding(chk *C) {
 	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
-	if encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		chk.Logf("encrypt base64 encode string: %q", encryptString)
-	}
+
+	encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	chk.Logf("encrypt base64 encode string: %q", encryptString)
 }
 
 func (s *MySuite) Test_Decrypt_Base64_RawURLEncoding(chk *C) {
-	encryptString := "yMeF0f/D03Hw2AieRkLejswAO0E36iO/KTph7R8uBKcWdiOC1MgWAqRwqBpVxpK/"
-	if encryptString, err := s.c.Encrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		chk.Logf("source string: %q", encryptString)
-	}
+	encryptString := "Dva6D-FdXXK3tJs-0sIQaB73aSVUWsGHakeUA1GiCJOcsXDfhteRKYbFGKThiQgs"
+
+	sourceString, err := s.c.Decrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	chk.Assert(sourceString, Equals, "1/fFAGRNJru1FTz70BzhT3Zg")
 }
 
 func (s *MySuite) Test_Encrypt_Decrypt_Base64_RawURLEncoding(chk *C) {
 	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
-	if encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		chk.Logf("encrypt base64 RawURLEncoding string: %q", encryptString)
 
-		decryptString, err := s.c.Decrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do()
-		if err != nil {
-			chk.Errorf("got decrypt message %q expected %q", decryptString, "1/fFAGRNJru1FTz70BzhT3Zg")
-		} else {
-			chk.Logf("decrypt decrypt message: %q", decryptString)
-		}
-	}
+	encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	chk.Logf("encrypt base64 RawURLEncoding string: %q", encryptString)
+
+	decryptString, err := s.c.Decrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	chk.Assert(decryptString, Equals, sourceString)
 }
 
 func (s *MySuite) Test_Encrypt_Decrypt_Msg(chk *C) {
 	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
 
-	if encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		if decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Do(); err != nil {
-			chk.Errorf("got descrypt %q expected %q", decryptString, sourceString)
-		} else {
-			chk.Logf("decrypt base64 encode string: %q", decryptString)
-		}
-	}
+	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do()
+	chk.Assert(err, IsNil)
+	decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Do()
+	chk.Assert(decryptString, Equals, sourceString)
 }
 
 func (s *MySuite) Test_Encrypt_Decrypt_Out_Msg(chk *C) {
@@ -99,29 +82,47 @@ func (s *MySuite) Test_Encrypt_Decrypt_Out_Msg(chk *C) {
 	}
 
 	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
+	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do()
+	chk.Assert(err, IsNil)
 
-	if encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		var b Info
-		if err := s.c.Decrypt.Msg(encryptBase64String).Out(&b); err != nil {
-			chk.Errorf("got descrypt %v expected %q", b, sourceString)
-		} else {
-			chk.Logf("decrypt base64 encode struct: %v", b)
-		}
-	}
+	var b Info
+	err = s.c.Decrypt.Msg(encryptBase64String).Out(&b)
+	chk.Assert(err, IsNil)
+	chk.Assert(b.User, Equals, "admin")
 }
 
 func (s *MySuite) Test_Encrypt_Decrypt_Msg_Custom_Base64_Encoding(chk *C) {
 	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
 
-	if encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do(); err != nil {
-		chk.Error(err.Error())
-	} else {
-		if decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Encoding(base64.RawURLEncoding).Do(); err != nil {
-			chk.Errorf("got descrypt %q expected %q", decryptString, sourceString)
-		} else {
-			chk.Logf("decrypt base64 encode string: %q", decryptString)
-		}
+	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Encoding(base64.RawURLEncoding).Do()
+	chk.Assert(err, IsNil)
+	chk.Assert(decryptString, Equals, sourceString)
+}
+
+func (s *MySuite) Test_Mobile_Team_Decrypt(chk *C) {
+	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
+
+	encryptString, err := s.c.Decrypt.Msg(encryptString).Do()
+	chk.Assert(err, IsNil)
+	chk.Logf("encrypt base64 encode string: %q", encryptString)
+}
+
+func (s *MySuite) Test_Mobile_Team_Decrypt2(chk *C) {
+	type Credentials struct {
+		AccessToken  string `json:"access_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+		RefreshToken string `json:"refresh_token"`
+		Provider     string `json:"provider"`
+		Error        string `json:"error"`
+		Scope        string `json:"scope"`
 	}
+
+	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
+
+	var creds Credentials
+	err := s.c.Decrypt.Msg(encryptString).Out(&creds)
+	chk.Assert(err, IsNil)
+	chk.Assert(creds.Provider, Equals, "google")
 }
