@@ -101,7 +101,7 @@ func (s *MySuite) Test_Encrypt_Decrypt_Msg_Custom_Base64_Encoding(chk *C) {
 	chk.Assert(decryptString, Equals, sourceString)
 }
 
-func (s *MySuite) Test_Mobile_Team_Decrypt(chk *C) {
+func (s *MySuite) Test_Android_Team_Decrypt(chk *C) {
 	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
 
 	encryptString, err := s.c.Decrypt.Msg(encryptString).Do()
@@ -109,7 +109,7 @@ func (s *MySuite) Test_Mobile_Team_Decrypt(chk *C) {
 	chk.Logf("encrypt base64 encode string: %q", encryptString)
 }
 
-func (s *MySuite) Test_Mobile_Team_Decrypt2(chk *C) {
+func (s *MySuite) Test_Android_Team_Decrypt_With_Struct(chk *C) {
 	type Credentials struct {
 		AccessToken  string `json:"access_token"`
 		ExpiresIn    int64  `json:"expires_in"`
@@ -120,6 +120,31 @@ func (s *MySuite) Test_Mobile_Team_Decrypt2(chk *C) {
 	}
 
 	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
+
+	var creds Credentials
+	err := s.c.Decrypt.Msg(encryptString).Out(&creds)
+	chk.Assert(err, IsNil)
+	chk.Assert(creds.Provider, Equals, "google")
+}
+
+func (s *MySuite) Test_iOS_Team_Decrypt(chk *C) {
+	base64Str := "VkHBqMZnjh1g8tSALBxZcEZJfI6PY1lR/zPq5LLDXdt5RMXr6xyY7MzljOdaTw+8/482O1oc+A0sVXBVbl5u9AqSyrtCEB/FwxuZUPOjQP709Mm9tJSWBQGZbUfM/0q0YTPoyd+7TLOhhFtPTK9H7p7CEN3ymqkkM3LXc4ds2klC5VXJ/GyAIT/38aqgjGtGGooWAv90nVZmK2kSywOVnKTGvnq+QzYQcX7ZhWWC2Rt8Mu9ctJggl/KFWyEKDpbkZ1SKnaL+hP5bSV65NrXakKd1mE/nbSAcwcG7dfzjJNv+8bJ1d51vo0n5JpoUJyd25yDmyCtk7nhB9D1GNSSChl9ZYQIzbVX8oITujmnLIqk=VkHBqMZnjh1g8tSALBxZcEZJfI6PY1lR/zPq5LLDXdt5RMXr6xyY7MzljOdaTw+8/482O1oc+A0sVXBVbl5u9AqSyrtCEB/FwxuZUPOjQP709Mm9tJSWBQGZbUfM/0q0YTPoyd+7TLOhhFtPTK9H7p7CEN3ymqkkM3LXc4ds2klC5VXJ/GyAIT/38aqgjGtGGooWAv90nVZmK2kSywOVnKTGvnq+QzYQcX7ZhWWC2Rt8Mu9ctJggl/KFWyEKDpbkZ1SKnaL+hP5bSV65NrXakKd1mE/nbSAcwcG7dfzjJNv+8bJ1d51vo0n5JpoUJyd25yDmyCtk7nhB9D1GNSSChl9ZYQIzbVX8oITujmnLIqk="
+	decryptString, err := s.c.Decrypt.Msg(base64Str).Do()
+	chk.Assert(err, IsNil)
+	chk.Logf("decrypt base64 encode string: %q", decryptString)
+}
+
+func (s *MySuite) Test_iOS_Team_Decrypt_With_Struct(chk *C) {
+	type Credentials struct {
+		AccessToken  string `json:"access_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+		RefreshToken string `json:"refresh_token"`
+		Provider     string `json:"provider"`
+		Error        string `json:"error"`
+		Scope        string `json:"scope"`
+	}
+
+	encryptString := "VkHBqMZnjh1g8tSALBxZcEZJfI6PY1lR/zPq5LLDXdt5RMXr6xyY7MzljOdaTw+8/482O1oc+A0sVXBVbl5u9AqSyrtCEB/FwxuZUPOjQP709Mm9tJSWBQGZbUfM/0q0YTPoyd+7TLOhhFtPTK9H7p7CEN3ymqkkM3LXc4ds2klC5VXJ/GyAIT/38aqgjGtGGooWAv90nVZmK2kSywOVnKTGvnq+QzYQcX7ZhWWC2Rt8Mu9ctJggl/KFWyEKDpbkZ1SKnaL+hP5bSV65NrXakKd1mE/nbSAcwcG7dfzjJNv+8bJ1d51vo0n5JpoUJyd25yDmyCtk7nhB9D1GNSSChl9ZYQIzbVX8oITujmnLIqk=VkHBqMZnjh1g8tSALBxZcEZJfI6PY1lR/zPq5LLDXdt5RMXr6xyY7MzljOdaTw+8/482O1oc+A0sVXBVbl5u9AqSyrtCEB/FwxuZUPOjQP709Mm9tJSWBQGZbUfM/0q0YTPoyd+7TLOhhFtPTK9H7p7CEN3ymqkkM3LXc4ds2klC5VXJ/GyAIT/38aqgjGtGGooWAv90nVZmK2kSywOVnKTGvnq+QzYQcX7ZhWWC2Rt8Mu9ctJggl/KFWyEKDpbkZ1SKnaL+hP5bSV65NrXakKd1mE/nbSAcwcG7dfzjJNv+8bJ1d51vo0n5JpoUJyd25yDmyCtk7nhB9D1GNSSChl9ZYQIzbVX8oITujmnLIqk="
 
 	var creds Credentials
 	err := s.c.Decrypt.Msg(encryptString).Out(&creds)
