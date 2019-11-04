@@ -66,7 +66,8 @@ $ glide get github.com/qeek-dev/cryhel
 
 ```go
 // new crypto helper
-c, err = cryhel.NewCrypto("AES256Key-32Characters1234567890")
+c, err := cryhel.NewCrypto("AES256Key-32Characters1234567890") // default use Zero padding
+c, err := cryhel.NewCryptoWithPadding("AES256Key-32Characters1234567890", cryhel.NewSpacePadding())
 
 // encrypt (default base64 StdEncoding)
 enc, err := c.Encrypt.Msg("string your want to encrypt").Do()
