@@ -16,7 +16,7 @@ type MySuite struct {
 }
 
 func (s *MySuite) SetUpTest(c *C) {
-	s.c, _ = cryhel.NewCrypto("AES256Key-32Characters1234567890")
+	s.c, _ = cryhel.NewCryptoWithPadding("AES256Key-32Characters1234567890", cryhel.NewSpacePadding())
 }
 
 var _ = Suite(&MySuite{})

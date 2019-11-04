@@ -1,7 +1,6 @@
 package cryhel
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -12,7 +11,6 @@ import (
 	"io"
 	"reflect"
 	"strings"
-	"unicode"
 )
 
 // any is purely semantic
@@ -30,7 +28,7 @@ func isPointer(value any) bool {
 
 // encrypt general func
 func (c *Crypto) encrypt(msg string) ([]byte, error) {
-	plaintext := SpacePadding([]byte(msg), c.block.BlockSize())
+	plaintext := c.padding.Pad([]byte(msg), c.block.BlockSize())
 
 	if len(plaintext)%c.block.BlockSize() != 0 {
 		return nil, errors.New("plaintext is not a multiple of the block size")
@@ -61,18 +59,8 @@ func (c *Crypto) decrypt(ciphertext []byte) ([]byte, error) {
 	planeText := make([]byte, len(ciphertext))
 	blockMode.CryptBlocks(planeText, ciphertext)
 
-	planeText = SpaceUnPadding(planeText[c.block.BlockSize():])
+	planeText = c.padding.UnPad(planeText, c.block.BlockSize())
 	return []byte(strings.TrimSpace(string(planeText))), nil
-}
-
-func SpacePadding(in []byte, blockSize int) []byte {
-	padding := blockSize - len(in)%blockSize
-	padtext := bytes.Repeat([]byte(" "), padding)
-	return append(in, padtext...)
-}
-
-func SpaceUnPadding(origData []byte) []byte {
-	return bytes.TrimFunc(origData, unicode.IsSpace)
 }
 
 // Crypto struct
@@ -82,19 +70,26 @@ type Crypto struct {
 
 	Encrypt *EncryptService
 	Decrypt *DecryptService
+
+	padding Padding
 }
 
-func NewCrypto(secretkey string) (c *Crypto, err error) {
-	if secretkey == "" {
+func NewCrypto(secretKey string) (c *Crypto, err error) {
+	return NewCryptoWithPadding(secretKey, NewZeroPadding())
+}
+
+func NewCryptoWithPadding(secretKey string, padding Padding) (c *Crypto, err error) {
+	if secretKey == "" {
 		err = errors.New("secret key empty")
 		return
 	}
 
 	c = &Crypto{}
-	c.bkey = []byte(secretkey)
+	c.bkey = []byte(secretKey)
 	c.block, err = aes.NewCipher(c.bkey)
 	c.Encrypt = NewEncryptService(c)
 	c.Decrypt = NewDecryptService(c)
+	c.padding = padding
 	if err != nil {
 		return
 	}
