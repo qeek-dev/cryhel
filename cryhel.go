@@ -59,7 +59,7 @@ func (c *Crypto) decrypt(ciphertext []byte) ([]byte, error) {
 	planeText := make([]byte, len(ciphertext))
 	blockMode.CryptBlocks(planeText, ciphertext)
 
-	planeText = c.padding.UnPad(planeText, c.block.BlockSize())
+	planeText = c.padding.UnPad(planeText[c.block.BlockSize():])
 	return []byte(strings.TrimSpace(string(planeText))), nil
 }
 

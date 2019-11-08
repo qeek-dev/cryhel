@@ -2,114 +2,298 @@ package cryhel_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"testing"
 
-	. "gopkg.in/check.v1"
-
 	"github.com/qeek-dev/cryhel"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+const secretKey = "AES256Key-32Characters1234567890"
 
-type MySuite struct {
-	c *cryhel.Crypto
+type setupSubTest func(t *testing.T) func(t *testing.T)
+
+type cryhelTestSuit struct {
+	crypto *cryhel.Crypto
 }
 
-func (s *MySuite) SetUpTest(c *C) {
-	s.c, _ = cryhel.NewCryptoWithPadding("AES256Key-32Characters1234567890", cryhel.NewSpacePadding())
+func (c *cryhelTestSuit) SetupSubTest(_ *testing.T) func(t *testing.T) {
+	return func(t *testing.T) {
+
+	}
 }
 
-var _ = Suite(&MySuite{})
+func setupCryhelTestSuit(t *testing.T) (cryhelTestSuit, func(t *testing.T)) {
+	s := cryhelTestSuit{}
+	return s, func(t *testing.T) {
 
-func (s *MySuite) Test_Encrypt_Base64_StdEncoding(chk *C) {
-	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
-
-	encryptString, err := s.c.Encrypt.Msg(sourceString).Do()
-	chk.Assert(err, IsNil)
-	chk.Logf("encrypt base64 encode string: %q", encryptString)
+	}
 }
 
-func (s *MySuite) Test_Decrypt_Base64_StdEncoding(chk *C) {
-	encryptString := "Ive8q7ljYMKl5cjrUBtUTDRs3oV0D8bxIKOP+wpuqqUZoflYYQgsGH0oIOLv77jP"
+func Test_Encrypt(t *testing.T) {
+	s, teardownTestCase := setupCryhelTestSuit(t)
+	defer teardownTestCase(t)
 
-	creds, err := s.c.Decrypt.Msg(encryptString).Do()
-	chk.Assert(err, IsNil)
-	chk.Assert(creds, Equals, "1/fFAGRNJru1FTz70BzhT3Zg")
+	zcrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewZeroPadding())
+	scrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewSpacePadding())
+
+	tt := []struct {
+		desc               string
+		giveBase64Encoding *base64.Encoding
+		giveMsg            string
+		setupSubTest       setupSubTest
+	}{
+		{
+			desc:               "zeropadding encrypt StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg:            "",
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "zeropadding encrypt RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg:            "",
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding encrypt StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg:            "",
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding encrypt RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg:            "",
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.desc, func(t *testing.T) {
+			teardownSubTest := tc.setupSubTest(t)
+			defer teardownSubTest(t)
+
+			_, err := s.crypto.Encrypt.Msg(tc.giveMsg).Encoding(tc.giveBase64Encoding).Do()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		})
+	}
 }
 
-func (s *MySuite) Test_Encrypt_Base64_RawURLEncoding(chk *C) {
-	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
+func Test_Decrypt(t *testing.T) {
+	s, teardownTestCase := setupCryhelTestSuit(t)
+	defer teardownTestCase(t)
 
-	encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	chk.Logf("encrypt base64 encode string: %q", encryptString)
+	zcrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewZeroPadding())
+	scrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewSpacePadding())
+
+	tt := []struct {
+		desc               string
+		giveBase64Encoding *base64.Encoding
+		giveMsg            string
+		setupSubTest       setupSubTest
+	}{
+		{
+			desc:               "zeropadding decrypt StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg: func() string {
+				enc, _ := zcrypto.Encrypt.Msg("mock string").Encoding(base64.StdEncoding).Do()
+				return enc
+			}(),
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "zeropadding decrypt RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg: func() string {
+				enc, _ := zcrypto.Encrypt.Msg("mock string").Encoding(base64.RawURLEncoding).Do()
+				return enc
+			}(),
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding decrypt StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg: func() string {
+				enc, _ := scrypto.Encrypt.Msg("mock string").Encoding(base64.StdEncoding).Do()
+				return enc
+			}(),
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding decrypt RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg: func() string {
+				enc, _ := scrypto.Encrypt.Msg("mock string").Encoding(base64.RawURLEncoding).Do()
+				return enc
+			}(),
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.desc, func(t *testing.T) {
+			teardownSubTest := tc.setupSubTest(t)
+			defer teardownSubTest(t)
+
+			_, err := s.crypto.Decrypt.Msg(tc.giveMsg).Encoding(tc.giveBase64Encoding).Do()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		})
+	}
 }
 
-func (s *MySuite) Test_Decrypt_Base64_RawURLEncoding(chk *C) {
-	encryptString := "Dva6D-FdXXK3tJs-0sIQaB73aSVUWsGHakeUA1GiCJOcsXDfhteRKYbFGKThiQgs"
+func Test_Decrypt_Out(t *testing.T) {
+	s, teardownTestCase := setupCryhelTestSuit(t)
+	defer teardownTestCase(t)
 
-	sourceString, err := s.c.Decrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	chk.Assert(sourceString, Equals, "1/fFAGRNJru1FTz70BzhT3Zg")
-}
+	zcrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewZeroPadding())
+	scrypto, _ := cryhel.NewCryptoWithPadding(secretKey, cryhel.NewSpacePadding())
 
-func (s *MySuite) Test_Encrypt_Decrypt_Base64_RawURLEncoding(chk *C) {
-	sourceString := "1/fFAGRNJru1FTz70BzhT3Zg"
-
-	encryptString, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	chk.Logf("encrypt base64 RawURLEncoding string: %q", encryptString)
-
-	decryptString, err := s.c.Decrypt.Msg(encryptString).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	chk.Assert(decryptString, Equals, sourceString)
-}
-
-func (s *MySuite) Test_Encrypt_Decrypt_Msg(chk *C) {
-	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
-
-	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do()
-	chk.Assert(err, IsNil)
-	decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Do()
-	chk.Assert(decryptString, Equals, sourceString)
-}
-
-func (s *MySuite) Test_Encrypt_Decrypt_Out_Msg(chk *C) {
 	type Info struct {
 		User      string `json:"user"`
 		Type      string `json:"type"`
 		StreamKey string `json:"streamKey"`
 	}
 
-	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
-	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Do()
-	chk.Assert(err, IsNil)
+	Info2String := func(i Info) string {
+		s, _ := json.Marshal(i)
+		return string(s)
+	}
 
-	var b Info
-	err = s.c.Decrypt.Msg(encryptBase64String).Out(&b)
-	chk.Assert(err, IsNil)
-	chk.Assert(b.User, Equals, "admin")
+	info := Info{
+		User:      "admin",
+		Type:      "2",
+		StreamKey: "live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded",
+	}
+
+	tt := []struct {
+		desc               string
+		giveBase64Encoding *base64.Encoding
+		giveMsg            string
+		wantOut            Info
+		setupSubTest       setupSubTest
+	}{
+		{
+			desc:               "zeropadding decrypt Out StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg: func() string {
+				enc, _ := zcrypto.Encrypt.Msg(Info2String(info)).Encoding(base64.StdEncoding).Do()
+				return enc
+			}(),
+			wantOut: info,
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "zeropadding decrypt Out RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg: func() string {
+				enc, _ := zcrypto.Encrypt.Msg(Info2String(info)).Encoding(base64.RawURLEncoding).Do()
+				return enc
+			}(),
+			wantOut: info,
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = zcrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding decrypt Out StdEncoding",
+			giveBase64Encoding: base64.StdEncoding,
+			giveMsg: func() string {
+				enc, _ := scrypto.Encrypt.Msg(Info2String(info)).Encoding(base64.StdEncoding).Do()
+				return enc
+			}(),
+			wantOut: info,
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+		{
+			desc:               "spacepadding decrypt Out RawURLEncoding",
+			giveBase64Encoding: base64.RawURLEncoding,
+			giveMsg: func() string {
+				enc, _ := scrypto.Encrypt.Msg(Info2String(info)).Encoding(base64.RawURLEncoding).Do()
+				return enc
+			}(),
+			wantOut: info,
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
+
+				}
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.desc, func(t *testing.T) {
+			teardownSubTest := tc.setupSubTest(t)
+			defer teardownSubTest(t)
+
+			err := s.crypto.Decrypt.Msg(tc.giveMsg).Encoding(tc.giveBase64Encoding).Out(&tc.wantOut)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			assert.Equal(t, info, tc.wantOut, fmt.Sprintf("%s: expected res %v got %v", tc.desc, info, tc.wantOut))
+		})
+	}
 }
 
-func (s *MySuite) Test_Encrypt_Decrypt_Msg_Custom_Base64_Encoding(chk *C) {
-	sourceString := `{"user":"admin","type":"2","streamKey":"live?token=b31d0e541427f52debea0f6d0ca368454f5323b384571b466f5894a3e100dd5d94cfb4a49ded"}`
+func Test_QcloudConnector_Decrypt(t *testing.T) {
+	s, teardownTestCase := setupCryhelTestSuit(t)
+	defer teardownTestCase(t)
 
-	encryptBase64String, err := s.c.Encrypt.Msg(sourceString).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	decryptString, err := s.c.Decrypt.Msg(encryptBase64String).Encoding(base64.RawURLEncoding).Do()
-	chk.Assert(err, IsNil)
-	chk.Assert(decryptString, Equals, sourceString)
-}
+	scrypto, _ := cryhel.NewCryptoWithPadding("H9SGAp2dxB4vetVJ9QeE3svzlpvVJYZA", cryhel.NewSpacePadding())
 
-func (s *MySuite) Test_Mobile_Team_Decrypt(chk *C) {
-	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
-
-	encryptString, err := s.c.Decrypt.Msg(encryptString).Do()
-	chk.Assert(err, IsNil)
-	chk.Logf("encrypt base64 encode string: %q", encryptString)
-}
-
-func (s *MySuite) Test_Mobile_Team_Decrypt2(chk *C) {
 	type Credentials struct {
 		AccessToken  string `json:"access_token"`
 		ExpiresIn    int64  `json:"expires_in"`
@@ -119,10 +303,32 @@ func (s *MySuite) Test_Mobile_Team_Decrypt2(chk *C) {
 		Scope        string `json:"scope"`
 	}
 
-	encryptString := "tZMQaHpwtCcHoymwJ9kUQLW3OMzS6sfqm9LZTkwGLsBrqdqhCAMrgYtnAV5tlkBuZLU4WRWg96Lwbq0bkAcs0WgbdroFtLie9lu//pHzVvxHkqIgZT6qL1wGggd9fE+mJESOGVYwv1ct9oJRE3h1UFuSHPK24EFoYauKIIE2ts3LPpha+8lNpXeuDAzpWQDDzS3la9ic1UE1WhZEsZIoRiHZbA7XdyaSOKVrSc/Z58Ql8ArsLCqpkRnt8WRGMoNTCms2pT6a6qCTNNQ03P3M27AdjBiQPsOGSzZa/g7lNo59lIQnxEXWq9UgU8Jh/ub0zg8glzOY/v3QqJjaubHHUMtE6jolK/yYowWglJ6iWN8="
+	tt := []struct {
+		desc         string
+		givenEnc     string
+		wantOut      Credentials
+		setupSubTest setupSubTest
+	}{
+		{
+			desc:     "decrypt qcloud connector",
+			givenEnc: "m7GFaaaHklwy0rGyRCjrk11viXiyrYZ0OR32L/xaVKHE2FlmM9lij7Z7qYfLqRiRT2nKCKtJYbf8IiLq9pYNt7WuGuShwhufFNNavM4JIss4cUvoggIHPT+XDcRE1KVcEuAOS0ksXy2V2QAcCegGJ6ibV7g6LIZE+QWMorp6lNZM7r2TFC1ZvHJXtnU+AJOzTvvKw24iMNbtZp0WlPF4VPFIELH3Tu8uFbU64f024NrPHFFGvCpsaVbZDKOgS8GEWY1ns3fyX9mO/HXZKt5YyTzrLqyS9moejPaAw+G5zCfWDWjEheOvzUdQcc7a9RZk2wFxbh35C4MMs/OUmxxW+sqQjYZqlXkyqUbtXxkePSffvAr+vBQ+62cvzc6XYAsK+8X2yGQxKpgDFkw1U4QF9zR2s7+TwRB0z1DPD1ofCOHqfu8VEvPiTcQtLoo7Y78kkghjS1rmK9UrChhpZkmRSw==",
+			setupSubTest: func(t *testing.T) func(t *testing.T) {
+				s.crypto = scrypto
+				return func(t *testing.T) {
 
-	var creds Credentials
-	err := s.c.Decrypt.Msg(encryptString).Out(&creds)
-	chk.Assert(err, IsNil)
-	chk.Assert(creds.Provider, Equals, "google")
+				}
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.desc, func(t *testing.T) {
+			teardownSubTest := tc.setupSubTest(t)
+			defer teardownSubTest(t)
+
+			err := s.crypto.Decrypt.Msg(tc.givenEnc).Out(&tc.wantOut)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			assert.NotEmpty(t, tc.wantOut)
+		})
+	}
 }
